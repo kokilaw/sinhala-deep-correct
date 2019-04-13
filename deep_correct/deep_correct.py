@@ -13,6 +13,7 @@ class DeepCorrect():
         DeepCorrect.model.load_weights(model_weights_path)
 
     def get_corrections_with_probability(self, sentence, beam_size=1):
+
         if not DeepCorrect.model:
             print('Please load the model')
         elif not DeepCorrect.params:
