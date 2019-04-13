@@ -151,10 +151,12 @@ def build_params(input_data=[], output_data=[], params_path='test_params', max_l
     params['output_encoding'] = output_encoding
     params['output_decoding'] = output_decoding
     params['output_dict_size'] = output_dict_size
-    params['max_input_length'] = max_lenghts[0]
-    params['max_output_length'] = max_lenghts[1]
+    params['max_input_length'] = max_lengths[0]
+    params['max_output_length'] = max_lengths[1]
 
-    pickle.dump(params, open(params_path, 'wb'))
+    os.makedirs(os.path.dirname(params_path), exist_ok=True)
+    with open(params_path, 'wb') as f:
+        pickle.dump(params, f)
     return params
 
 
