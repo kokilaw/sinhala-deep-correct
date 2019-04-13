@@ -1,9 +1,6 @@
 from __future__ import unicode_literals, print_function, division
 from io import open
 import re
-import random
-import os
-import pickle
 
 MAX_LENGTH = 200
 MIN_WORD_COUNT = 3

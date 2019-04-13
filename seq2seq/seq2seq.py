@@ -133,7 +133,7 @@ def infer_greedy(text, model, params):
     return decode_sequence(output_decoding_dict, decoder_output[0])
 
 
-def build_params(input_data=[], output_data=[], params_path='test_params', max_lenghts=(5, 5)):
+def build_params(input_data=[], output_data=[], params_path='test_params', max_lengths=(5, 5)):
     if os.path.exists(params_path):
         print('Loading the params file')
         params = pickle.load(open(params_path, 'rb'))
@@ -185,7 +185,7 @@ def convert_training_data(input_data, output_data, params):
     return x, y
 
 
-def build_model(params_path='test/params', enc_lstm_units=128, unroll=True, use_gru=False, optimizer='adam'):
+def build_model(params_path='test/params', enc_lstm_units=128, unroll=True):
     # generateing the encoding, decoding dicts
     params = build_params(params_path=params_path)
 
@@ -212,37 +212,23 @@ def build_model(params_path='test/params', enc_lstm_units=128, unroll=True, use_
     encoder = Embedding(input_dict_size, enc_lstm_units,
                         input_length=max_input_length, mask_zero=True)(encoder_input)
     # using concat merge mode since in my experiments it gave the best results same with unroll
-    if not use_gru:
-        encoder = Bidirectional(LSTM(enc_lstm_units, return_sequences=True,
-                                     return_state=True, unroll=unroll), merge_mode='concat')(encoder)
-        encoder_outs, forward_h, forward_c, backward_h, backward_c = encoder
-        encoder_h = concatenate([forward_h, backward_h])
-        encoder_c = concatenate([forward_c, backward_c])
-
-    else:
-        encoder = Bidirectional(GRU(enc_lstm_units, return_sequences=True,
-                                    return_state=True, unroll=unroll), merge_mode='concat')(encoder)
-        encoder_outs, forward_h, backward_h = encoder
-        encoder_h = concatenate([forward_h, backward_h])
+    encoder = Bidirectional(LSTM(
+        enc_lstm_units, return_sequences=True, unroll=unroll), merge_mode='concat')(encoder)
+    encoder_last = encoder[:, -1, :]
 
     # using 2* enc_lstm_units because we are using concat merge mode
     # cannot use bidirectionals lstm for decoding (obviously!)
 
-    decoder = Embedding(output_dict_size, 2 * enc_lstm_units,
-                        input_length=max_output_length, mask_zero=True)(decoder_input)
-
-    if not use_gru:
-        decoder = LSTM(2 * enc_lstm_units, return_sequences=True,
-                       unroll=unroll)(decoder, initial_state=[encoder_h, encoder_c])
-    else:
-        decoder = GRU(2 * enc_lstm_units, return_sequences=True,
-                      unroll=unroll)(decoder, initial_state=encoder_h)
+    decoder = Embedding(output_dict_size, 2 * enc_lstm_units, input_length=max_output_length, mask_zero=True)(
+        decoder_input)
+    decoder = LSTM(2 * enc_lstm_units, return_sequences=True, unroll=unroll)(decoder,
+                                                                             initial_state=[encoder_last, encoder_last])
 
     # luong attention
-    attention = dot([decoder, encoder_outs], axes=[2, 2])
+    attention = dot([decoder, encoder], axes=[2, 2])
     attention = Activation('softmax', name='attention')(attention)
 
-    context = dot([attention, encoder_outs], axes=[2, 1])
+    context = dot([attention, encoder], axes=[2, 1])
 
     decoder_combined_context = concatenate([context, decoder])
 
@@ -252,7 +238,7 @@ def build_model(params_path='test/params', enc_lstm_units=128, unroll=True, use_
         Dense(output_dict_size, activation="softmax"))(output)
 
     model = Model(inputs=[encoder_input, decoder_input], outputs=[output])
-    model.compile(optimizer=optimizer,
+    model.compile(optimizer='adam',
                   loss='categorical_crossentropy', metrics=['accuracy'])
     model.summary()
 

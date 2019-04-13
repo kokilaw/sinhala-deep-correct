@@ -12,7 +12,7 @@ class DeepCorrect():
         DeepCorrect.params = params
         DeepCorrect.model.load_weights(model_weights_path)
 
-    def get_corrections_with_probability(self, sentence, beam_size=1):
+    def get_beam_search_corrections(self, sentence, beam_size=1):
 
         if not DeepCorrect.model:
             print('Please load the model')
@@ -25,7 +25,7 @@ class DeepCorrect():
 
         return sentence
 
-    def get_correction(self, sentence):
+    def get_greedy_search_correction(self, sentence):
         if not DeepCorrect.model:
             print('Please load the model')
         elif not DeepCorrect.params:

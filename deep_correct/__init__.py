@@ -1,1 +1,1 @@
-from .deep_correct import DeepCorrect
+from .deep_correct import *
