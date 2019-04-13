@@ -11,6 +11,7 @@ class DeepCorrect():
         DeepCorrect.model = model
         DeepCorrect.params = params
         DeepCorrect.model.load_weights(model_weights_path)
+        # due to the issue (https://github.com/keras-team/keras/issues/6462)
         DeepCorrect.model._make_predict_function()
 
     def get_beam_search_corrections(self, sentence, beam_size=1):
