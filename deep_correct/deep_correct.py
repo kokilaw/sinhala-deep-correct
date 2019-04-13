@@ -2,7 +2,8 @@ from seq2seq import build_model, infer, infer_greedy
 
 
 class DeepCorrect():
-    deepcorrect_model = None
+    model = None
+    params = None
 
     def __init__(self, params_path, model_weights_path):
         # loading the model
