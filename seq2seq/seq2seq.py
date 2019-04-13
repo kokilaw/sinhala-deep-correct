@@ -1,17 +1,22 @@
-from keras.callbacks import ModelCheckpoint
-from keras.models import Model, load_model
-from keras.layers import Input, Embedding, LSTM, TimeDistributed, Dense, SimpleRNN, Activation, dot, concatenate, Bidirectional, GRU
-import tensorflow as tf
+from __future__ import unicode_literals, print_function, division
+from io import open
 import os
 import pickle
 
 import numpy as np
+
 np.random.seed(6788)
 
+import tensorflow as tf
+
+sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
 tf.set_random_seed(6788)
 
+from keras.layers import Input, Embedding, LSTM, TimeDistributed, Dense, SimpleRNN, Activation, dot, concatenate, \
+    Bidirectional
+from keras.models import Model, load_model
 
-# Placeholder for max lengths of input and output which are user configruable constants
+# Placeholder for max lengths of input and output which are user configurable constants
 max_input_length = None
 max_output_length = None
 
@@ -49,8 +54,9 @@ def decode_sequence(decoding_dict, sequence):
     return text
 
 
-def generate(text, input_encoding_dict, model, max_input_length, max_output_length, beam_size, max_beams, min_cut_off_len, cut_off_ratio):
-    min_cut_off_len = max(min_cut_off_len, cut_off_ratio*len(text))
+def generate(text, input_encoding_dict, model, max_input_length, max_output_length, beam_size, max_beams,
+             min_cut_off_len, cut_off_ratio):
+    min_cut_off_len = max(min_cut_off_len, cut_off_ratio * len(text))
     min_cut_off_len = min(min_cut_off_len, max_output_length)
 
     encoder_input = encode_sequences(
@@ -76,7 +82,7 @@ def generate(text, input_encoding_dict, model, max_input_length, max_output_leng
                 sorted_args = prediction.argsort()
                 sorted_probs = np.sort(prediction)
 
-                for i in range(1, beam_size+1):
+                for i in range(1, beam_size + 1):
                     temp_running_beam = np.copy(running_beam)
                     i = -1 * i
                     ith_arg = sorted_args[:, i][len(probs)]
@@ -97,8 +103,8 @@ def infer(text, model, params, beam_size=3, max_beams=3, min_cut_off_len=10, cut
     max_input_length = params['max_input_length']
     max_output_length = params['max_output_length']
 
-    decoder_outputs = generate(text, input_encoding_dict, model, max_input_length,
-                               max_output_length, beam_size, max_beams, min_cut_off_len, cut_off_ratio)
+    decoder_outputs = generate(text, input_encoding_dict, model, max_input_length, max_output_length, beam_size,
+                               max_beams, min_cut_off_len, cut_off_ratio)
     outputs = []
     for decoder_output, probs in decoder_outputs:
         outputs.append({'sequence': decode_sequence(

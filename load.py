@@ -1,5 +1,4 @@
 from deep_correct import DeepCorrect
-from seq2seq import build_model
 
 
 def init(param_file_path='./checkpoints/params', weights_file_path='./checkpoints/checkpoint_weights.h5'):

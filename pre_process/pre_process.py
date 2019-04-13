@@ -14,8 +14,8 @@ def normalize_string(s):
 
 def filter_pair(p, ignore_list=[]):
     return MAX_WORD_COUNT >= len(p[0].split(' ')) >= MIN_WORD_COUNT and \
-        len(p[0]) <= MAX_LENGTH and \
-        not p[0] in ignore_list
+           len(p[0]) <= MAX_LENGTH and \
+           not p[0] in ignore_list
 
 
 def filter_pairs(pairs, ignore_list=[]):

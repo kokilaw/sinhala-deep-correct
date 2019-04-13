@@ -1,8 +1,70 @@
 from load import init
-from flask import Flask, render_template, request
+from flask import Flask, request, jsonify, abort
 
 import re
 import sys
 import os
 
+from pre_process import normalize_string
+
+app = Flask(__name__)
+global corrector, model, params
 corrector, model, params = init()
+
+regexp = re.compile(r'[^\u0D80-\u0DFF.!?\s]')
+
+
+def valid_sinhala_sentence(sentence):
+    if not sentence:
+        return False
+    elif sentence == '':
+        return False
+    elif regexp.search(sentence):
+        return False
+    else:
+        return True
+
+
+def get_corrections(sentence, useBeamSearch=False, beamSize=1):
+    normalized_sentence = normalize_string(sentence)
+    normalized_sentence = normalized_sentence.strip()
+    corrections = []
+    if useBeamSearch:
+        corrections = corrector.get_beam_search_corrections(
+            normalized_sentence, beamSize)
+    else:
+        corrections = [corrector.get_greedy_search_correction(
+            normalized_sentence)]
+
+    return corrections
+
+
+@app.route('/correct', methods=['POST'])
+def correct():
+    if request.is_json:
+        request_data = request.get_json()
+
+        if 'sentence' in request_data.keys() and valid_sinhala_sentence(request_data['sentence']):
+            sentence = request_data['sentence']
+            useBeamSearch = request_data['useBeamSearch'] if 'useBeamSearch' in request_data.keys(
+            ) else False
+            beamSize = request_data['beamSize'] if 'beamSize' in request_data.keys(
+            ) else 1
+            corrections = get_corrections(
+                sentence, useBeamSearch=useBeamSearch, beamSize=beamSize)
+            return jsonify(corrections)
+        else:
+            abort(422, "Invalid Sinhala Sentece")
+
+        return jsonify(request_data)
+    else:
+        abort(400, "Invalid JSON request")
+
+
+if __name__ == "__main__":
+    # decide what port to run the app in
+    port = int(os.environ.get('PORT', 5000))
+    # run the app locally on the givn port
+    app.run(host='0.0.0.0', port=port)
+    # optional if we want to run in debugging mode
+    # app.run(debug=True)

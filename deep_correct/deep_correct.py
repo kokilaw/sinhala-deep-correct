@@ -11,6 +11,7 @@ class DeepCorrect():
         DeepCorrect.model = model
         DeepCorrect.params = params
         DeepCorrect.model.load_weights(model_weights_path)
+        DeepCorrect.model._make_predict_function()
 
     def get_beam_search_corrections(self, sentence, beam_size=1):
 
