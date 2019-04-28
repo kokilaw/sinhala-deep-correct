@@ -108,7 +108,7 @@ def infer(text, model, params, beam_size=3, max_beams=3, min_cut_off_len=10, cut
     outputs = []
     for decoder_output, probs in decoder_outputs:
         outputs.append({'sequence': decode_sequence(
-            output_decoding_dict, decoder_output[0]), 'prob': np.prod(probs)})
+            output_decoding_dict, decoder_output[0]), 'probability': np.prod(probs)})
 
     return outputs
 

@@ -25,16 +25,21 @@ def valid_sinhala_sentence(sentence):
         return True
 
 
-def get_corrections(sentence, useBeamSearch=False, beamSize=1):
+def get_corrections(sentence, useBeamSearch=False, beamSize=3):
     normalized_sentence = normalize_string(sentence)
     normalized_sentence = normalized_sentence.strip()
-    corrections = []
+    corrections = {}
     if useBeamSearch:
-        corrections = corrector.get_beam_search_corrections(
+        corrections['results'] = corrector.get_beam_search_corrections(
             normalized_sentence, beamSize)
+        corrections['useBeamSearch'] = useBeamSearch
     else:
-        corrections = [corrector.get_greedy_search_correction(
-            normalized_sentence)]
+        corrections['results'] = [{
+            "sequence": corrector.get_greedy_search_correction(
+                normalized_sentence),
+            "probability": None
+        }]
+        corrections['useBeamSearch'] = useBeamSearch
 
     return corrections
 
@@ -48,10 +53,8 @@ def correct():
             sentence = request_data['sentence']
             useBeamSearch = request_data['useBeamSearch'] if 'useBeamSearch' in request_data.keys(
             ) else False
-            beamSize = request_data['beamSize'] if 'beamSize' in request_data.keys(
-            ) else 1
             corrections = get_corrections(
-                sentence, useBeamSearch=useBeamSearch, beamSize=beamSize)
+                sentence, useBeamSearch=useBeamSearch)
             return jsonify(corrections)
         else:
             abort(422, "Invalid Sinhala Sentece")
