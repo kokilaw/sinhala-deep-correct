@@ -49,6 +49,9 @@ def get_corrections(sentence, useBeamSearch=False, beamSize=3):
 
     return corrections
 
+@app.route('/')
+def index():
+    return 'Sinhala-Deep-Grammar Rest API'
 
 @app.route('/correct', methods=['POST'])
 @cross_origin()
