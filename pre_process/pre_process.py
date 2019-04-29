@@ -9,6 +9,7 @@ MAX_WORD_COUNT = 8
 
 def normalize_string(s):
     s = re.sub(r"([.!?])", r" \1", s)
+    s = re.sub(r"(\s[.!?])", r"\1", s)
     return s
 
 

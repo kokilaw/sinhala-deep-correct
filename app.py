@@ -1,5 +1,6 @@
 from load import init
 from flask import Flask, request, jsonify, abort
+from flask_cors import CORS, cross_origin
 
 import re
 import sys
@@ -8,10 +9,13 @@ import os
 from pre_process import normalize_string
 
 app = Flask(__name__)
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Access-Control-Allow-Origin'
+
 global corrector, model, params
 corrector, model, params = init()
 
-regexp = re.compile(r'[^\u0D80-\u0DFF.!?\s]')
+regexp = re.compile(r'[^\u0D80-\u0DFF.!?\s\u200d]')
 
 
 def valid_sinhala_sentence(sentence):
@@ -45,9 +49,11 @@ def get_corrections(sentence, useBeamSearch=False, beamSize=3):
 
 
 @app.route('/correct', methods=['POST'])
+@cross_origin()
 def correct():
     if request.is_json:
         request_data = request.get_json()
+        print(request_data)
 
         if 'sentence' in request_data.keys() and valid_sinhala_sentence(request_data['sentence']):
             sentence = request_data['sentence']
