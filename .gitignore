@@ -116,7 +116,7 @@ venv.bak/
 .idea/*
 
 # checkpoints
-checkpoints/*
+# checkpoints/*
 
 # data
 data/*

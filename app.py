@@ -13,6 +13,8 @@ cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Access-Control-Allow-Origin'
 
 global corrector, model, params
+
+# Building and loading the keras model, params file contains the encoding/decoding dictionaries.
 corrector, model, params = init()
 
 regexp = re.compile(r'[^\u0D80-\u0DFF.!?\s\u200d]')
@@ -63,7 +65,7 @@ def correct():
                 sentence, useBeamSearch=useBeamSearch)
             return jsonify(corrections)
         else:
-            abort(422, "Invalid Sinhala Sentece")
+            abort(422, "Unsupported argument. Invalid Sinhala sentence type.")
 
         return jsonify(request_data)
     else:
