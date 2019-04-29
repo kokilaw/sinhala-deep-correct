@@ -38,14 +38,12 @@ def get_corrections(sentence, useBeamSearch=False, beamSize=3):
     if useBeamSearch:
         corrections['results'] = corrector.get_beam_search_corrections(
             normalized_sentence, beamSize)
-        corrections['useBeamSearch'] = useBeamSearch
     else:
         corrections['results'] = [{
             "sequence": corrector.get_greedy_search_correction(
                 normalized_sentence),
             "probability": None
         }]
-        corrections['useBeamSearch'] = useBeamSearch
 
     return corrections
 
@@ -68,6 +66,7 @@ def correct():
             ) else False
             corrections = get_corrections(
                 sentence, useBeamSearch=useBeamSearch)
+            corrections['useBeamSearch'] = useBeamSearch
             return jsonify(corrections)
         else:
             abort(422, "Unsupported argument. Invalid Sinhala sentence type.")
@@ -79,7 +78,8 @@ def correct():
 
 if __name__ == "__main__":
     # decide what port to run the app in
-    port = int(os.environ.get('PORT', 5000))
+    # port = int(os.environ.get('PORT', 5000))
+    port = int(os.environ.get('PORT', 80))
     # run the app locally on the givn port
     app.run(host='0.0.0.0', port=port)
     # optional if we want to run in debugging mode
