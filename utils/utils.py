@@ -62,7 +62,9 @@ def tokenize_sinhala_text(text):
 
     escape_encoded_text = re.sub(r"([.!?])", r"\1\t", escape_encoded_text)
     sentences = escape_encoded_text.split("\t")
-    sentences.remove('')
+
+    if '' in sentences:
+        sentences.remove('')
 
     decoded_sentences = []
 
