@@ -78,7 +78,7 @@ def index():
     return 'Sinhala-Deep-Grammar Rest API'
 
 
-@app.route('/correct', methods=['POST'])
+@app.route('/api/correct', methods=['POST'])
 @cross_origin()
 def correct():
     if request.is_json:
@@ -104,7 +104,7 @@ def correct():
         abort(400, "Invalid JSON request")
 
 
-@app.route('/correct/paragraph', methods=['POST'])
+@app.route('/api/correct/paragraph', methods=['POST'])
 @cross_origin()
 def correct_paragraph():
     if request.is_json:
