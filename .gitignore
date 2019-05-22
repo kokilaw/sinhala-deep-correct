@@ -120,3 +120,4 @@ venv.bak/
 
 # data
 data/*
+lm/*

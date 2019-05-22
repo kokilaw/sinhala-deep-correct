@@ -1,10 +1,12 @@
+import re
+import sys
+import os
+
 from load import init
 from flask import Flask, request, jsonify, abort
 from flask_cors import CORS, cross_origin
 
-import re
-import sys
-import os
+import kenlm
 
 from pre_process import normalize_string
 from utils import tokenize_sinhala_text
@@ -17,6 +19,7 @@ global corrector, model, params
 
 # Building and loading the keras model, params file contains the encoding/decoding dictionaries.
 corrector, model, params = init()
+ngramModel = kenlm.LanguageModel('./lm/sinhala_lm.binary')
 
 regexp = re.compile(r'[^\u0D80-\u0DFF.!?,\s\u200d]')
 
@@ -32,14 +35,32 @@ def valid_sinhala_sentence(sentence):
         return True
 
 
-def get_corrections(sentence, useBeamSearch=False, beamSize=3):
+def ngram_score_calculation(sentence):
+    ngramScore = ngramModel.score(sentence['suggestion'])
+    return {
+        'suggestion': sentence['suggestion'],
+        'grammarModelProb': sentence['grammarModelProb'],
+        'ngramScore': ngramScore
+    }
+
+
+def get_corrections(sentence, useBeamSearch=False, beamSize=3, useNgramScore=False):
     normalized_sentence = normalize_string(sentence)
     normalized_sentence = normalized_sentence.strip()
     corrections = {}
     corrections["sentence"] = normalized_sentence
     if useBeamSearch:
+
         corrections['results'] = corrector.get_beam_search_corrections(
             normalized_sentence, beamSize)
+
+        if useNgramScore:
+            corrections['results'] = list(map(ngram_score_calculation, corrections['results']))
+            corrections['attributeAffected'] = "grammarModelProb"
+            if corrections['results'][0]['grammarModelProb'] < 0.8:
+                corrections['results'].sort(key=lambda x: x['ngramScore'], reverse=True)
+                corrections['attributeAffected'] = "ngramScore"
+
         corrections['isCorrect'] = corrections['results'][0]["suggestion"] == normalized_sentence
     else:
         corrections['results'] = [{
@@ -68,9 +89,12 @@ def correct():
             sentence = request_data['sentence']
             useBeamSearch = request_data['useBeamSearch'] if 'useBeamSearch' in request_data.keys(
             ) else False
+            useNgramScore = request_data['useNgramScore'] if 'useNgramScore' in request_data.keys(
+            ) else False
             corrections = get_corrections(
-                sentence, useBeamSearch=useBeamSearch)
+                sentence, useBeamSearch=useBeamSearch, useNgramScore=useNgramScore)
             corrections['useBeamSearch'] = useBeamSearch
+            corrections['useNgramScore'] = useNgramScore
             return jsonify(corrections)
         else:
             abort(422, "Unsupported argument. Invalid Sinhala sentence type.")
@@ -91,16 +115,19 @@ def correct_paragraph():
             text = request_data['text']
             useBeamSearch = request_data['useBeamSearch'] if 'useBeamSearch' in request_data.keys(
             ) else False
+            useNgramScore = request_data['useNgramScore'] if 'useNgramScore' in request_data.keys(
+            ) else False
             sentences = tokenize_sinhala_text(text)
 
             sentence_corrections = []
 
             for sentence in sentences:
                 corrections = get_corrections(
-                    sentence, useBeamSearch=useBeamSearch)
+                    sentence, useBeamSearch=useBeamSearch, useNgramScore=useNgramScore)
                 sentence_corrections.append(corrections)
 
-            evaluation = {'useBeamSearch': useBeamSearch, "sentences": sentence_corrections}
+            evaluation = {'useBeamSearch': useBeamSearch, 'useNgramScore': useNgramScore,
+                          "sentences": sentence_corrections}
 
             return jsonify(evaluation)
         else:
