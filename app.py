@@ -57,7 +57,7 @@ def get_corrections(sentence, useBeamSearch=False, beamSize=3, useNgramScore=Fal
         if useNgramScore:
             corrections['results'] = list(map(ngram_score_calculation, corrections['results']))
             corrections['attributeAffected'] = "grammarModelProb"
-            if corrections['results'][0]['grammarModelProb'] < 0.8:
+            if corrections['results'][0]['grammarModelProb'] < 0.7:
                 corrections['results'].sort(key=lambda x: x['ngramScore'], reverse=True)
                 corrections['attributeAffected'] = "ngramScore"
 
